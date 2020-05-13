@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<title>User {{ user|title }}</title>
+</head>
+<style>
+	.mainBlock{
+		padding: 1%;
+		padding-left: 0%;
+		margin: 2%;
+		width: 50%;
+		height: 60vh;
+		border: 1px solid black;
+		overflow-y: scroll;
+		overflow-x: visible;
+		margin-bottom: 0px;
+	}
+	.sendMsg{
+		margin-top: 1px;
+		margin-bottom: 1px;
+		border-top: 0px;
+		height: inherit;
+		padding:0px;
+		overflow: hidden;
+	}
+	.msgBox{
+		resize: none;
+		border: 0px solid transparent;
+		display: inline;
+	}
+	textarea:hover, textarea:active, textarea:focus, .btn:active,.btn.active{
+		outline:0px !important;
+		-webkit-appearance:none;
+		box-shadow: none !important;
+	}
+	.sendBtn{
+		width: 100%;
+		margin-bottom:-5% ;
+	}
+	.message{
+		margin: 0%;
+		padding: 5%;
+		border: 1px solid black;
+		border-radius: 10px;
+		text-align: justify;
+	}
+	.message-row{
+		padding: 0px;
+		margin: 0px;
+	}
+</style>
+<body>
+	<div class='mainBlock' id='main'>
+		<div class="row">
+			<div class="col s8">
+				<div class="message">
+					{% lorem 20 w random %}
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s8 push-s4">
+				<div class="message">
+					{% lorem 20 w random %}
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class='mainBlock sendMsg'>
+		<div class="row" style="margin-bottom:0px">
+			<div class="col s10 " style="padding: 0px;margin: 0px;">
+				<textarea class='msgBox' type="text" id='msg'></textarea>
+			</div>
+			<div class="col s2" style="padding: 0px;margin: 0px;">
+				<a class="sendBtn btn-large waves-effect waves-light light-blue darken-2" onclick="send()"><i class="material-icons">send</i></a>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+	$(document).ready(function(){
+		function csrfSafeMethod(method) {
+			return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+		};
+		leftAddMsg = function(data){
+			$(`
+				<div class="row">
+					<div class="col s8">
+						<div class="message">`
+							+data+
+						`</div>
+					</div>
+				</div>
+			`).appendTo("#main");
+		};
+		rightAddMsg = function(data){
+			$(`
+				<div class="row">
+					<div class="col s8 push-s4">
+						<div class="message">`
+							+data+
+						`</div>
+					</div>
+				</div>
+			`).appendTo("#main");
+		};
+		// var allMsgs = JSON.parse("{{data|escapejs}}");
+		// console.log(allMsgs);
+		send = function(){
+			var csrftoken = Cookies.get('csrftoken');
+			var msg = $("#msg").val();
+			console.log(msg);
+			$.ajax({
+				url	: "http://127.0.0.1:8000/ajax/"+"{{user}}",
+				type: "POST",
+				data: {
+					"msg":msg
+				},
+				beforeSend: function(xhr, settings) {
+        		if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            		xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        		}},
+				success	: function(data, status){
+					rightAddMsg(msg);
+					$("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 500);
+					console.log("Data: " + data + "\nStatus: " + status);
+					$("#msg").val("");
+				}
+			});
+		}
+	})	
+</script>
