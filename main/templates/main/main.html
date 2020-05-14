@@ -54,6 +54,7 @@
 	}
 </style>
 <body>
+	{% csrf_token %}
 	<div class='mainBlock' id='main'>
 		<div class="row">
 			<div class="col s8">
@@ -86,6 +87,8 @@
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
+	var d = new Date();
+	console.log(d.getSeconds()/100);
 	$(document).ready(function(){
 		function csrfSafeMethod(method) {
 			return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -112,14 +115,27 @@
 				</div>
 			`).appendTo("#main");
 		};
-		// var allMsgs = JSON.parse("{{data|escapejs}}");
-		// console.log(allMsgs);
+		setup = function(){
+			var allMsgs = JSON.parse("{{data|escapejs}}");
+			console.log(allMsgs);
+			for(var x in allMsgs){
+				// console.log(allMsgs[x][0],allMsgs[x][1],)
+				if(allMsgs[x][1]=="{{user}}"){
+					rightAddMsg(allMsgs[x][0])
+				}
+				else{
+					leftAddMsg(allMsgs[x][0])
+				}
+			};
+			$("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 100);
+		};
+		setup();
 		send = function(){
 			var csrftoken = Cookies.get('csrftoken');
 			var msg = $("#msg").val();
 			console.log(msg);
 			$.ajax({
-				url	: "http://127.0.0.1:8000/ajax/"+"{{user}}",
+				url	: "{{website}}"+"ajax/"+"{{user}}",
 				type: "POST",
 				data: {
 					"msg":msg

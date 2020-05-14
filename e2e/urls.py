@@ -8,6 +8,7 @@ urlpatterns = [
     path('user/<slug:uid>', views.user),
     path('ajax/<slug:uid>', views.ajax),
     path('e1/<slug:uid>',views.exchange1),
-    path('server/save/',views.server),
+    path('server/save/',views.serverSave),
+    path('server/all/',views.serverGetAll),
     path('test/',views.test),
 ]
