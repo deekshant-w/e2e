@@ -55,22 +55,7 @@
 </style>
 <body>
 	{% csrf_token %}
-	<div class='mainBlock' id='main'>
-		<div class="row">
-			<div class="col s8">
-				<div class="message">
-					{% lorem 20 w random %}
-				</div>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col s8 push-s4">
-				<div class="message">
-					{% lorem 20 w random %}
-				</div>
-			</div>
-		</div>
-	</div>
+	<div class='mainBlock' id='main'></div>
 	<div class='mainBlock sendMsg'>
 		<div class="row" style="margin-bottom:0px">
 			<div class="col s10 " style="padding: 0px;margin: 0px;">
@@ -81,7 +66,7 @@
 			</div>
 		</div>
 	</div>
-	<a class="sendBtn btn-large waves-effect waves-light light-blue darken-2" onclick="getMsgs()"><i class="material-icons">send</i></a>
+	<!-- <a class="sendBtn btn-large waves-effect waves-light light-blue darken-2" onclick="getMsgs()"><i class="material-icons">send</i></a> -->
 
 </body>
 </html>
@@ -90,6 +75,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
 	var last;
+	var cacheLast='';
 	// var d = new Date();
 	// console.log(d.getSeconds()/100);
 	$(document).ready(function(){
@@ -118,21 +104,6 @@
 				</div>
 			`).appendTo("#main");
 		};
-		setup = function(){
-			last = "{{last}}";
-			var allMsgs = JSON.parse("{{data|escapejs}}");
-			// console.log(allMsgs);
-			for(var x in allMsgs){
-				if(allMsgs[x][1]=="{{user}}"){
-					rightAddMsg(allMsgs[x][0])
-				}
-				else{
-					leftAddMsg(allMsgs[x][0])
-				}
-			};
-			$("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 100);
-		};
-		setup();
 		getMsgs = function(){
 			var csrftoken = Cookies.get('csrftoken');
 			$.ajax({
@@ -154,6 +125,7 @@
 						};
 						$("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 500);
 					}
+					// console.log(last);
 					getMsgs();
 					// rightAddMsg(msg);
 					// $("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 500);
@@ -162,10 +134,30 @@
 				}
 			});
 		}
+		setup = function(){
+			last = "{{last}}";
+			var allMsgs = JSON.parse("{{data|escapejs}}");
+			// console.log(allMsgs);
+			for(var x in allMsgs){
+				if(allMsgs[x][1]=="{{user}}"){
+					rightAddMsg(allMsgs[x][0])
+				}
+				else {
+					leftAddMsg(allMsgs[x][0])
+				}
+			};
+			$("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 100);
+			getMsgs();
+		};
+		setup();
 		send = function(){
 			var csrftoken = Cookies.get('csrftoken');
 			var msg = $("#msg").val();
-			console.log(msg);
+			if(msg){
+			$("#msg").val("");
+			rightAddMsg(msg);
+			$("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 500);
+			// console.log(msg);
 			$.ajax({
 				url	: "{{website}}"+"ajax/"+"{{user}}",
 				type: "POST",
@@ -177,12 +169,10 @@
             		xhr.setRequestHeader("X-CSRFToken", csrftoken);
         		}},
 				success	: function(data, status){
-					rightAddMsg(msg);
 					$("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 500);
-					console.log("Data: " + data + "\nStatus: " + status);
-					$("#msg").val("");
+					// console.log("Data: " + data + "\nStatus: " + status);
 				}
 			});
 		}
-	})	
+	}})	
 </script>

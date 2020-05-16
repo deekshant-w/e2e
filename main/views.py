@@ -9,7 +9,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
 import base64
 
-website = 'http://192.168.0.37:8000/'
+website = 'http://8f972a78.ngrok.io/'
 newMsgAva = {'a':0,'b':0}
 
 def landing(request):
@@ -29,7 +29,7 @@ def test(request):
 	key2	= keyExchange('b').encode()
 	decrypt	= AES.new(key, AES.MODE_EAX, nonce=nonce)
 	msg 	= decrypt.decrypt(msg)
-	print(nonce,tag,msg,key,key2,sep='\n\n')
+	# rint(nonce,tag,msg,key,key2,sep='\n\n')
 	return HttpResponse(msg)
 
 def msgDecrypt(msg,key):
@@ -184,7 +184,6 @@ def serverSave(request):
 		newMsg = Message(msg = msg, sender=user)
 		newMsg.save()
 		requests.get(url= website+'newMessageAvaialable/'+invertUser(user))
-		print(newMsgAva)
 		return HttpResponse(200)
 	return HttpResponse("SERVER!")
 
@@ -199,7 +198,6 @@ def serverGetAll(request):
 def serverFromTS(request):
 	if(request.method=='POST'):
 		timeStamp = stringToDate(request.POST.get('timeStamp'))
-		print(timeStamp)
 		user = request.POST.get('user')
 		data = Message.objects.filter(timeStamp__gt=timeStamp,sender=user)
 		msgData = list(data.values('msg'))
