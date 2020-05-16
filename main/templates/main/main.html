@@ -81,14 +81,17 @@
 			</div>
 		</div>
 	</div>
+	<a class="sendBtn btn-large waves-effect waves-light light-blue darken-2" onclick="getMsgs()"><i class="material-icons">send</i></a>
+
 </body>
 </html>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-	var d = new Date();
-	console.log(d.getSeconds()/100);
+	var last;
+	// var d = new Date();
+	// console.log(d.getSeconds()/100);
 	$(document).ready(function(){
 		function csrfSafeMethod(method) {
 			return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -116,10 +119,10 @@
 			`).appendTo("#main");
 		};
 		setup = function(){
+			last = "{{last}}";
 			var allMsgs = JSON.parse("{{data|escapejs}}");
-			console.log(allMsgs);
+			// console.log(allMsgs);
 			for(var x in allMsgs){
-				// console.log(allMsgs[x][0],allMsgs[x][1],)
 				if(allMsgs[x][1]=="{{user}}"){
 					rightAddMsg(allMsgs[x][0])
 				}
@@ -130,6 +133,35 @@
 			$("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 100);
 		};
 		setup();
+		getMsgs = function(){
+			var csrftoken = Cookies.get('csrftoken');
+			$.ajax({
+				url	: "{{website}}"+"newMsgs/"+"{{user}}",
+				type: "POST",
+				data: {
+					'last':last,
+				},
+				beforeSend: function(xhr, settings) {
+        		if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            		xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        		}},
+				success	: function(data, status){
+					var recievedData = JSON.parse(data)
+					if(recievedData['status']){
+						last = recievedData['last'];
+						for(var x in recievedData['data']){
+							leftAddMsg(recievedData['data'][x]);
+						};
+						$("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 500);
+					}
+					getMsgs();
+					// rightAddMsg(msg);
+					// $("#main").animate({ scrollTop: $('#main').prop("scrollHeight")}, 500);
+					// console.log("Data: " + data + "\nStatus: " + status);
+					// $("#msg").val("");
+				}
+			});
+		}
 		send = function(){
 			var csrftoken = Cookies.get('csrftoken');
 			var msg = $("#msg").val();

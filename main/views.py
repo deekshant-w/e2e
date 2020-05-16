@@ -10,10 +10,15 @@ from datetime import datetime
 import base64
 
 website = 'http://192.168.0.37:8000/'
-fromToConversionTable = {'1':'a','2':'b'}
+newMsgAva = {'a':0,'b':0}
 
 def landing(request):
 	return HttpResponse("Hello World or something? I dont know.\nTry being a or b.", content_type="text/plain")
+
+def invertUser(u):
+	if(u=='a'):
+		return 'b'
+	return 'a'
 
 def test(request):
 	data	= Message.objects.all()[10].msg
@@ -36,25 +41,22 @@ def msgDecrypt(msg,key):
 	msg 	= decrypt.decrypt(msg).decode()
 	return msg
 
-def stringToDate(s):
-	return datetime.strptime(s,'%Y-%m-%d %H:%M:%S.%f%z')
-
 def user(request,uid=None):
 	if(uid is None):
 		return HttpResponse("What were you expecting? Magic?", content_type="text/plain")
 	if(uid!='a' and uid!='b'):
 		return HttpResponse("We are not here yet!", content_type="text/plain")
 	key = keyExchange(uid).encode()
-	data = requests.get(url=website+'server/all/').json()['data']
+	data = requests.get(url=website+'server/all/').json()
+	last = data['last']
+	data = data['data']
 	cleanData = []
 	for x in range(len(data)):
 		cleanData.append([
 			msgDecrypt(data[x]["msg"],key),
 			data[x]["sender"],
-			stringToDate(data[x]['timeStamp'])
 		])
 	data = dumps(cleanData,default=str)
-	print(cleanData[x][0])
 	return render(
 		request,
 		'main/main.html',
@@ -62,6 +64,7 @@ def user(request,uid=None):
 			'user':uid,
 			'data':data,
 			'website':website,
+			'last': last,
 		}
 	)
 
@@ -100,15 +103,9 @@ def exchange1(request,uid):
 	return HttpResponse(combine1(uid))
 
 def keyExchange(user):
-	if(user=='a'):
-		user='b'
-	else:
-		user='a'
+	user = invertUser(user)
 	e1 = requests.get(website+"e1/"+user).text
-	if(user=='a'):
-		user='b'
-	else:
-		user='a'
+	user = invertUser(user)
 	key = combine2(user,e1)
 	result = numberToString(str(key),32)
 	return result
@@ -138,28 +135,47 @@ def ajax(request,uid):
 			},
 			headers=newHeader
 		)
-		# d = AES.new(key, AES.MODE_EAX, nonce=nonce)
-		# p = d.decrypt(ciphertext)
 		return HttpResponse(responce.text)
 	return HttpResponse("Error")
 
-def newMsg(request,uid):
+def newMsgs(request,uid):
+	thisUser = uid
+	uid = invertUser(uid)
 	if(request.method=='POST'):
-		timeStamp = request.POST.get('lastStamp')
+		timeStamp = request.POST.get('last')
 		newHeader = getHeader(request.headers)
+		while(not newMsgAva[invertUser(uid)]):
+			pass
 		responce = requests.post(
 			url = website + 'server/fromTS/',
 			data = {
 				'timeStamp':timeStamp,
-				
+				'user':uid,				
 			},
 			headers=newHeader
-		)
+		).json()
+		msgs = []
+		if(responce['status']):
+			key = keyExchange(thisUser).encode()
+			for m in responce['data']:
+				msgs.append(msgDecrypt(m['msg'],key))
+			responce['data'] = msgs
+		newMsgAva[invertUser(uid)] = 0
+		return HttpResponse(dumps(responce))
+	return HttpResponse('Well?')
 		
+def newMessageAvaialable(request,uid):
+	if(request.method=='GET'):
+		newMsgAva[uid] = 1
+	return HttpResponse('OK!!')
+
 
 ######################################################################
 ######## Server Code Below : Can be Seperated ########################
 ######################################################################
+def stringToDate(s):
+	return datetime.strptime(s,'%Y-%m-%d %H:%M:%S.%f%z')
+
 def serverSave(request):
 	if(request.method=='POST'):
 		user = request.POST.get('user').strip()
@@ -167,33 +183,33 @@ def serverSave(request):
 		msg = str(base64.b64encode(msg))[2:-1]
 		newMsg = Message(msg = msg, sender=user)
 		newMsg.save()
-		return HttpResponse(e)
+		requests.get(url= website+'newMessageAvaialable/'+invertUser(user))
+		print(newMsgAva)
+		return HttpResponse(200)
 	return HttpResponse("SERVER!")
-
-def default(o):
-    if isinstance(o, (datetime.date, datetime.datetime)):
-        return o.isoformat()
 
 def serverGetAll(request):
 	if(request.method=='GET'):
-		data = Message.objects.values('timeStamp','sender','msg')
-		payload = dumps({'data':list(data)},default=str)	#,cls=DjangoJSONEncoder)
-		print(payload)
+		data = Message.objects.values('sender','msg')
+		last = Message.objects.latest('timeStamp').timeStamp
+		payload = dumps({'data':list(data),'last':last},default=str)	#,cls=DjangoJSONEncoder)
 		return HttpResponse(payload)
-	# a = datetime.strptime(testing['data'][0]['timeStamp'],'%Y-%m-%dT%H:%M:%S.%fZ')
 	return HttpResponse("Not that easy")
 
 def serverFromTS(request):
 	if(request.method=='POST'):
-		timeStamp = stringToDate(request.GET.get('timeStamp'))
-		data = Message.objects.filter(timeStamp__gt=timeStamp)
+		timeStamp = stringToDate(request.POST.get('timeStamp'))
+		print(timeStamp)
+		user = request.POST.get('user')
+		data = Message.objects.filter(timeStamp__gt=timeStamp,sender=user)
+		msgData = list(data.values('msg'))
 		result = {}
-		print(data)
 		if(len(data)):
 			result['status'] = 1
-			result['data'] = data
+			result['data'] = msgData
+			result['last'] = data[len(data)-1].timeStamp
 		else:
 			result['status'] = 0
-		payload = dumps(result,default=default)
+		payload = dumps(result,default=str)
 		return HttpResponse(payload)
 	return HttpResponse("Server From Index")
