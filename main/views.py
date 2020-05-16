@@ -9,7 +9,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
 import base64
 
-website = 'http://8f972a78.ngrok.io/'
+website = 'http://127.0.0.1:8000/'
 newMsgAva = {'a':0,'b':0}
 
 def landing(request):
