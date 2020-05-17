@@ -27,7 +27,9 @@ def diffieHellmanMapping():
 	handle.close()
 	print(mapping)
 
-diffieHellmanMapping()
+# diffieHellmanMapping()
 # generateKey(59,"modulus")
 # generateKey(128,"privateKeys/KeyForA")
 # generateKey(128,"privateKeys/KeyForB")
+# generateKey(64,"PublicKey")
+print(len(charecters))
