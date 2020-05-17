@@ -1,6 +1,6 @@
 # End to End Encryption
 
-This is a python(django) implementation of End to End Encryption using **Diffie Hellman Key Exchange** method along with **RSA encryption**. Although in real aaplications the user and server side of of such a chating service are supposed to be seperate. But for demonstration purposes in this project the users and the chatting server are combined. Although they are together yet they have been created in such a way that views and models of the user and the server are completely interdependent and and can easily be split onto seperate devices with a change in base server url.
+This is a python(django) implementation of End to End Encryption using **Diffie Hellman Key Exchange** method along with **AES encryption**. Although in real aaplications the user and server side of of such a chating service are supposed to be seperate. But for demonstration purposes in this project the users and the chatting server are combined. Although they are together yet they have been created in such a way that views and models of the user and the server are completely interdependent and and can easily be split onto seperate devices with a change in base server url.
 
 ## Getting Started
 ##### Setting up environment-
