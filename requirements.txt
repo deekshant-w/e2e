@@ -7,4 +7,4 @@ pycryptodome==3.9.7
 pytz==2020.1
 requests==2.31.0
 sqlparse==0.4.4
-urllib3==1.26.17
+urllib3==1.26.18
