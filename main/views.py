@@ -29,7 +29,7 @@ def test(request):
 	key2	= keyExchange('b').encode()
 	decrypt	= AES.new(key, AES.MODE_EAX, nonce=nonce)
 	msg 	= decrypt.decrypt(msg)
-	# rint(nonce,tag,msg,key,key2,sep='\n\n')
+	# print(nonce,tag,msg,key,key2,sep='\n\n')
 	return HttpResponse(msg)
 
 def msgDecrypt(msg,key):
